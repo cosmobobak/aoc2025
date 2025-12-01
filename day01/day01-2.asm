@@ -51,6 +51,26 @@ _start:
     jmp   parse          ; continue parsing
   parse_done:
     inc   r11            ; skip the newline
+  ; part 2
+    ; we wish to increment r10 by the number
+    ; of rotations that `rax` has just induced
+    ; in `r9`. Simply dividing `rax` by 100 will
+    ; fail, as it can induce a tickover if close
+    ; to the boundary. As such, we'll need some
+    ; fixup after the fact.
+    mov    r12, rax      ; save rax
+    mov    rcx, 100      ; set divisor to 100
+    xor    edx, edx      ; zero out rdx for division
+                         ; apparently idiv is 128-bit!?
+    idiv   rcx           ; get a lower bound on rot in rax
+    add    r10, rax      ; job part 1: done
+    mov    rax, r12      ; restore rax
+    ; now, we need to figure out if the sub-100 remainder
+    ; causes an additional rotation.
+    ; we can do this by detecting if, after modulo,
+    ; the dial position has moved in the opposite
+    ; direction to the sign stored in rbx.
+  ; part 2
     imul  rax, rbx       ; flip number if L
     add    r9, rax       ; rotate dial
     ; <mod100>
