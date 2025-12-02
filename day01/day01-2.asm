@@ -51,27 +51,49 @@ _start:
     jmp   parse          ; continue parsing
   parse_done:
     inc   r11            ; skip the newline
-  ; part 2
-    ; we wish to increment r10 by the number
-    ; of rotations that `rax` has just induced
-    ; in `r9`. Simply dividing `rax` by 100 will
-    ; fail, as it can induce a tickover if close
-    ; to the boundary. As such, we'll need some
-    ; fixup after the fact.
-    mov    r12, rax      ; save rax
-    mov    rcx, 100      ; set divisor to 100
-    xor    edx, edx      ; zero out rdx for division
-                         ; apparently idiv is 128-bit!?
-    idiv   rcx           ; get a lower bound on rot in rax
-    add    r10, rax      ; job part 1: done
-    mov    rax, r12      ; restore rax
-    ; now, we need to figure out if the sub-100 remainder
-    ; causes an additional rotation.
-    ; we can do this by detecting if, after modulo,
-    ; the dial position has moved in the opposite
-    ; direction to the sign stored in rbx.
-  ; part 2
     imul  rax, rbx       ; flip number if L
+  ; part 2
+    mov   r12, rax       ; save rot val
+    mov   r13, r9        ; a = angle
+    add   r13, rbx       ; a = angle + dir
+    mov   r14, r9        ; b = angle
+    add   r14, rax       ; b = angle + val * dir
+    ; ensure r13 <= r14
+    cmp   r13, r14       ; compare a and b
+    jle   no_swap        ; if a <= b, no swap needed
+    xchg  r13, r14       ; otherwise swap them
+  no_swap:
+    ; now r9 += max(b // 100 - (a + 99) // 100 + 1, 0)
+    ; r14 = floor_div(r14, 100):
+    mov   rax, r14
+    mov   rcx, 100
+    cqo                  ; sign extend rax into rdx:rax
+    idiv  rcx            ; rax = quotient, rdx = remainder
+    test  rdx, rdx       ; check if remainder is negative
+    jns   no_adjust1     ; if non-negative, skip adjustment
+    dec   rax            ; if negative remainder, subtract 1 from quotient
+  no_adjust1:
+    mov   r14, rax
+    ; r13 = floor_div(r13 + 99, 100)
+    add   r13, 99
+    mov   rax, r13
+    mov   rcx, 100
+    cqo                  ; sign extend rax into rdx:rax
+    idiv  rcx            ; rax = quotient, rdx = remainder
+    test  rdx, rdx       ; check if remainder is negative
+    jns   no_adjust2     ; if non-negative, skip adjustment
+    dec   rax            ; if negative remainder, subtract 1 from quotient
+  no_adjust2:
+    mov   r13, rax
+    ; compute r14 - r13 + 1
+    sub   r14, r13
+    inc   r14
+    mov   r13, 0
+    cmp   r14, 0
+    cmovl r14, r13
+    add   r10, r14
+    mov   rax, r12       ; restore rot
+  ; part 2
     add    r9, rax       ; rotate dial
     ; <mod100>
     mov    rax, r9       ; save original value
@@ -85,9 +107,11 @@ _start:
   mod_done:
     mov    r9, rdx       ; store result
     ; </mod100>
-    cmp r9 , 0 ; if zero,
-    jne loop
-    inc r10    ; increment alignment counter
+  ; deleted for part 2
+    ; cmp r9 , 0 ; if zero,
+    ; jne loop
+    ; inc r10    ; increment alignment counter
+  ; deleted for part 2
     jmp loop
   loop_done:
     ; now, we need to serialise the alignment counter.
