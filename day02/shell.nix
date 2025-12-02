@@ -5,7 +5,7 @@ in
 pkgs.mkShell {
   buildInputs = [
     (hp.ghcWithPackages (ps: with ps; [
-      containers text vector split megaparsec
+      containers text vector split megaparsec list-duplicate
     ]))
     hp.haskell-language-server
   ];
