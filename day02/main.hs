@@ -27,21 +27,11 @@ invalid [a, b] n = concat cnts
     hdb = db `div` n
     -- all the exponents for each block size
     exps = [e `div` n | e <- [da..db], e `mod` n == 0]
-    -- if `a` is 13, da is 2,
-    -- and we should start at 1
-    -- if `a` is 127125, da is 6,
-    -- and we should start at 125.
-    -- s_lo = a `div` (10 ^ hda)
-    -- s_hi = a `mod` (10 ^ hda)
-    s_bits = [(a `div` 10 ^ (hda * i)) `mod` 10 ^ hda | i <- [0..(n-1)]]
-    -- s = if even da then max s_lo s_hi else 10 ^ hda
-    s = if da `mod` n == 0 then min (last s_bits + 1) (maximum s_bits) else 10 ^ hda
+    s_bits = traceShowId [(a `div` 10 ^ (hda * i)) `mod` 10 ^ hda | i <- [0..(n-1)]]
+    s = if da `mod` n == 0 then traceShowId $ min (last s_bits + 1) (maximum s_bits) else 10 ^ hda
     -- converse for b
-    -- e_lo = b `div` (10 ^ hdb)
-    -- e_hi = b `mod` (10 ^ hdb)
-    e_bits = [(b `div` 10 ^ (hdb * i)) `mod` 10 ^ hdb | i <- [0..(n-1)]]
-    -- e = if even db then min e_lo e_hi else 10 ^ hdb - 1
-    e = if db `mod` n == 0 then max (minimum e_bits) (last e_bits - 1) else 10 ^ hdb - 1
+    e_bits = traceShowId [(b `div` 10 ^ (hdb * i)) `mod` 10 ^ hdb | i <- [0..(n-1)]]
+    e = if db `mod` n == 0 then traceShowId $ max (minimum e_bits) (last e_bits - 1) else 10 ^ hdb - 1
 
     cnts = [process s e i (length exps) exp n | (i, exp) <- zip [0..] exps]
 
@@ -52,7 +42,7 @@ invalid [a, b] n = concat cnts
 process :: Int -> Int -> Int -> Int -> Int -> Int -> [Int]
 process start end index l exponent n = map expify [lo..hi]
   where
-    lo = if index == 0 then start else 0
+    lo = if index == 0 then start else 10 ^ (exponent - 1)
     hi = if index + 1 == l then end else 10 ^ exponent - 1
     -- expify x = x + x * 10 ^ exponent
     expify x = sum [x * 10 ^ (exponent * i) | i <- [0..(n-1)]]
