@@ -17,7 +17,7 @@ import Text.Printf
 -- x from 0 to 10^(n-1), adding one each
 -- time.
 invalid :: [Int] -> Int
-invalid [a, b] = trace (printf "invalid [%d %d] [exps = %s] [cnts = %s] = %d" a b (show exps) (show cnts) (sum $ map sum cnts)) sum $ map sum cnts
+invalid [a, b] = sum $ map sum cnts
   where
     da = digits a
     db = digits b
@@ -45,7 +45,7 @@ invalid [a, b] = trace (printf "invalid [%d %d] [exps = %s] [cnts = %s] = %d" a 
 -- if the range is the final one, end at e
 -- otherwise, start at 1 and end at 10^digits - 1
 process :: Int -> Int -> Int -> Int -> Int -> [Int]
-process start end index l exponent = trace (printf "process [%d %d] i=%d l=%d e=%d = %d" start end index l exponent (hi - lo)) map (\x -> x + x * 10 ^ exponent) [lo..hi]
+process start end index l exponent = map (\x -> x + x * 10 ^ exponent) [lo..hi]
   where
     lo = if index == 0 then start else 0
     hi = if index + 1 == l then end else 10 ^ exponent - 1
