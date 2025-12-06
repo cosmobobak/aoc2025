@@ -10,20 +10,37 @@ pub fn main() !void {
     const bytes = try stdin.interface.readSliceShort(&r2_buffer);
     const input = r2_buffer[0..bytes];
 
-    try stdout.interface.print("Beginning work!\n", .{});
-
     // iterate over lines of input
     var it = std.mem.tokenizeScalar(u8, input, '\n');
-    var sum: i64 = 0;
+    var sum1: i64 = 0;
+    var sum2: i64 = 0;
     while (it.next()) |x| {
-        const max = std.mem.indexOfMax(u8, x[0 .. x.len - 1]);
-        const next = std.mem.indexOfMax(u8, x[max + 1 ..]) + max + 1;
-        const val = (x[max] - '0') * 10 + (x[next] - '0');
-        try stdout.interface.print("val = {}\n", .{val});
-        sum += val;
+        sum1 += find_max_arrangement(x, 2);
+        sum2 += find_max_arrangement(x, 12);
     }
 
-    try stdout.interface.print("sum = {}\n", .{sum});
+    try stdout.interface.print("sum1 = {}\n", .{sum1});
+    try stdout.interface.print("sum2 = {}\n", .{sum2});
 
     try stdout.interface.flush(); // Must flush before reading!
+}
+
+fn find_max_arrangement(slice: []const u8, digits: usize) i64 {
+    // in part 1, `digits` is fixed to 2, but now we generalise.
+    var indices: [20]usize = undefined; // max 20 digits
+    // the place in the slice we've used so far
+    var used: usize = 0;
+    for (0..digits) |i| {
+        // we always wish to extract the maximal MSD first
+        const max = std.mem.indexOfMax(u8, slice[used .. slice.len - digits + i + 1]) + used;
+        indices[i] = max;
+        used = max + 1;
+    }
+    // now compute the sum
+    var sum: i64 = 0;
+    for (0..digits) |i| {
+        const idx = indices[i];
+        sum += @as(i64, slice[idx] - '0') * std.math.pow(i64, 10, @as(i64, @intCast(digits)) - @as(i64, @intCast(i)) - 1);
+    }
+    return sum;
 }
