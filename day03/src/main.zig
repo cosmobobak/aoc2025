@@ -1,9 +1,6 @@
 const std = @import("std");
 
 pub fn main() !void {
-    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    // defer _ = gpa.deinit();
-    // const allocator = gpa.allocator();
     var r_buffer: [1024 * 64]u8 = undefined;
     var w_buffer: [1024 * 64]u8 = undefined;
     var stdin = std.fs.File.stdin().reader(&r_buffer);
