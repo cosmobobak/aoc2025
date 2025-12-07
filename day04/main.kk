@@ -70,13 +70,14 @@ fun main() {
     grid_buf := grid.list.map-indexed fn(r, row_vec) {
       row_vec.list.map-indexed fn(c, cell) {
         if (to_replace.any fn(pos) { pos == (r, c) }) then {
-          picked_any := True
           '.'
         } else {
           cell
         }
       }.vector
     }.vector
+
+    picked_any := (to_replace != Nil)
 
     pickable_so_far := pickable_so_far + pickable_this_round
   }
